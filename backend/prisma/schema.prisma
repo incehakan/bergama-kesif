@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Belediye {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  ad           String
+  anaRenk      String   @default("#c0392b")
+  ikinciRenk   String   @default("#2c3e50")
+  logoUrl      String?
+  aktif        Boolean  @default(true)
+  olusturma    DateTime @default(now())
+
+  kullanicilar Kullanici[]
+  tarihce      Tarihce[]
+  baskanMesaji BaskanMesaji[]
+  yemeIcme     YemeIcme[]
+  rotalar      TurizmRotasi[]
+  etkinlikler  Etkinlik[]
+  haberler     Haber[]
+  eserler      TarihiEser[]
+  vrIcerikler  VRIcerik[]
+}
+
+model Kullanici {
+  id          Int      @id @default(autoincrement())
+  email       String
+  sifre       String
+  ad          String
+  rol         Rol      @default(EDITOR)
+  aktif       Boolean  @default(true)
+  belediyeId  Int
+  belediye    Belediye @relation(fields: [belediyeId], references: [id])
+  olusturma   DateTime @default(now())
+
+  @@unique([email, belediyeId])
+}
+
+enum Rol {
+  ADMIN
+  EDITOR
+}
+
+model Tarihce {
+  id              Int      @id @default(autoincrement())
+  baslik          String
+  icerik          String
+  kapakFotoUrl    String?
+  galeriUrls      String[]
+  yayinda         Boolean  @default(true)
+  belediyeId      Int
+  belediye        Belediye @relation(fields: [belediyeId], references: [id])
+  guncelleme      DateTime @updatedAt
+}
+
+model BaskanMesaji {
+  id          Int      @id @default(autoincrement())
+  baskanAdi   String
+  unvan       String   @default("Belediye Başkanı")
+  mesaj       String
+  fotografUrl String?
+  belediyeId  Int
+  belediye    Belediye @relation(fields: [belediyeId], references: [id])
+  guncelleme  DateTime @updatedAt
+}
+
+model YemeIcme {
+  id            Int       @id @default(autoincrement())
+  isim          String
+  kategori      YKategori
+  aciklama      String?
+  adres         String?
+  telefon       String?
+  kapakFotoUrl  String?
+  galeriUrls    String[]
+  koordinatLat  Float?
+  koordinatLng  Float?
+  yayinda       Boolean   @default(true)
+  sira          Int       @default(0)
+  belediyeId    Int
+  belediye      Belediye  @relation(fields: [belediyeId], references: [id])
+  olusturma     DateTime  @default(now())
+}
+
+enum YKategori {
+  RESTORAN
+  KAFE
+  PASTANE
+  SOKAK_LEZZETI
+  BAR
+}
+
+model TurizmRotasi {
+  id               Int      @id @default(autoincrement())
+  baslik           String
+  kisaAciklama     String?
+  detayliAciklama  String?
+  sureSaat         Float?
+  mesafeKm         Float?
+  zorluk           Zorluk   @default(KOLAY)
+  kapakFotoUrl     String?
+  galeriUrls       String[]
+  rotaDuraklar     Json
+  yayinda          Boolean  @default(true)
+  belediyeId       Int
+  belediye         Belediye @relation(fields: [belediyeId], references: [id])
+  olusturma        DateTime @default(now())
+}
+
+enum Zorluk {
+  KOLAY
+  ORTA
+  ZOR
+}
+
+model Etkinlik {
+  id              Int      @id @default(autoincrement())
+  baslik          String
+  aciklama        String?
+  tarihBaslangic  DateTime
+  tarihBitis      DateTime?
+  konum           String?
+  kapakFotoUrl    String?
+  ucretsiz        Boolean  @default(true)
+  yayinda         Boolean  @default(true)
+  belediyeId      Int
+  belediye        Belediye @relation(fields: [belediyeId], references: [id])
+  olusturma       DateTime @default(now())
+}
+
+model Haber {
+  id           Int      @id @default(autoincrement())
+  baslik       String
+  ozet         String?
+  icerik       String?
+  kapakFotoUrl String?
+  yayinda      Boolean  @default(true)
+  belediyeId   Int
+  belediye     Belediye @relation(fields: [belediyeId], references: [id])
+  olusturma    DateTime @default(now())
+}
+
+model TarihiEser {
+  id               Int       @id @default(autoincrement())
+  qrKodu           String    @unique @default(cuid())
+  isim             String
+  donem            String?
+  kisaAciklama     String?
+  detayliAciklama  String?
+  kapakFotoUrl     String?
+  galeriUrls       String[]
+  videoUrl         String?
+  ekVideolar       String[]
+  koordinatLat     Float?
+  koordinatLng     Float?
+  taramaSayisi     Int       @default(0)
+  yayinda          Boolean   @default(true)
+  belediyeId       Int
+  belediye         Belediye  @relation(fields: [belediyeId], references: [id])
+  vrIcerikId       Int?
+  vrIcerik         VRIcerik? @relation(fields: [vrIcerikId], references: [id])
+  olusturma        DateTime  @default(now())
+}
+
+model VRIcerik {
+  id          Int        @id @default(autoincrement())
+  baslik      String
+  aciklama    String?
+  tip         VRTip
+  dosyaUrl    String
+  onizlemeUrl String?
+  sure        Int?
+  yayinda     Boolean    @default(true)
+  belediyeId  Int
+  belediye    Belediye   @relation(fields: [belediyeId], references: [id])
+  eserler     TarihiEser[]
+  olusturma   DateTime   @default(now())
+}
+
+enum VRTip {
+  FOTOGRAF_360
+  VIDEO_360
+}
