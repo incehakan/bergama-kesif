@@ -5,7 +5,8 @@ export default function QRPrint({ eser, onKapat }) {
   const canvasRef = useRef(null);
   const printRef = useRef(null);
 
-  const qrUrl = `http://localhost:3001/api/public/bergama/eserler/qr/${eser.qrKodu}`;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const qrUrl = `${apiUrl}/api/public/bergama/eserler/qr/${eser.qrKodu}`;
 
   useEffect(() => {
     if (canvasRef.current) {

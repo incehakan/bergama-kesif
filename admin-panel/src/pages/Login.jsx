@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
-import axios from 'axios'
-import { TOKEN_KEY, getErrorMessage } from '../lib/api.js'
+import { api, TOKEN_KEY, getErrorMessage } from '../lib/api.js'
 
 const DEFAULT_BELEDIYE_SLUG = 'bergama'
 
@@ -21,7 +20,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const { data } = await axios.post('http://localhost:3001/api/auth/login', {
+      const { data } = await api.post('/api/auth/login', {
         email: email.trim(),
         sifre,
         belediyeSlug: DEFAULT_BELEDIYE_SLUG,
