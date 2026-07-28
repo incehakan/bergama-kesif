@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Keşif Bergama",
+    "slug": "kesif-bergama",
+    "version": "1.0.0",
+    "scheme": "kesif-bergama",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "orientation": "portrait",
+    "plugins": [
+      "expo-router",
+      "expo-camera"
+    ],
+    "extra": {
+      "apiUrl": "http://45.43.152.58:3001",
+      "belediyeSlug": "bergama",
+      "router": {},
+      "eas": {
+        "projectId": "7ba180b5-c5c7-4a98-b665-895296970c3f"
+      }
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "package": "com.kesif.bergama"
+    }
+  }
+}
