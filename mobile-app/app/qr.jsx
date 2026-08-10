@@ -74,8 +74,8 @@ export default function QRScreen() {
         Alert.alert('Hata', 'Bu QR kod tanınamadı')
         setTimeout(() => setScanning(true), 2000)
       }
-    } catch {
-      Alert.alert('Hata', 'Bu QR kod tanınamadı')
+    } catch (e) {
+      Alert.alert('Hata (debug)', String(e?.message || e))
       setTimeout(() => setScanning(true), 2000)
     }
   }

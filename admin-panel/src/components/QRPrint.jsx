@@ -160,7 +160,10 @@ export default function QRPrint({ eser, onKapat }) {
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">QR Kod</h2>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">QR Kod Önizleme</h2>
+            <p className="mt-1 text-xs text-gray-500">Bu eser için kayıtlı QR — her açılışta yeniden üretilmez.</p>
+          </div>
           <button onClick={onKapat} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
         </div>
 
@@ -195,7 +198,7 @@ export default function QRPrint({ eser, onKapat }) {
         </div>
 
         <p className="text-xs text-gray-400 text-center mt-3">
-          Bu QR kodu tabelaya yapıştırabilir veya yazdırabilirsiniz.
+          İndirmeden ekranda görebilirsiniz; PNG/yazdır isteğe bağlıdır.
         </p>
       </div>
     </div>

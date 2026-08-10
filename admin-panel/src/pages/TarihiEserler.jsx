@@ -165,7 +165,20 @@ export default function TarihiEserler() {
                   <tr key={r.id} className="hover:bg-slate-50/80">
                     <td className="px-4 py-3 font-medium text-slate-900">{r.isim}</td>
                     <td className="px-4 py-3 text-slate-600">{r.donem || '—'}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-700">{shortQr(r.qrKodu)}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                      {r.qrKodu ? (
+                        <button
+                          type="button"
+                          onClick={() => setQrEser(r)}
+                          title="QR kodunu görüntüle"
+                          className="text-left text-red-900 hover:underline"
+                        >
+                          {shortQr(r.qrKodu)}
+                        </button>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-slate-600">{r.taramaSayisi ?? 0}</td>
                     <td className="px-4 py-3">
                       <span
@@ -182,7 +195,7 @@ export default function TarihiEserler() {
                         onClick={() => setQrEser(r)}
                         className="text-red-900 hover:underline"
                       >
-                        QR Oluştur
+                        QR Görüntüle
                       </button>
                       <button
                         type="button"
