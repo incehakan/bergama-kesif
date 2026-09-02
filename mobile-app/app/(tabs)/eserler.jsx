@@ -10,11 +10,11 @@ import {
   Image,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { Video, ResizeMode } from 'expo-av'
-import { QrCode } from 'lucide-react-native'
+import { Landmark, QrCode } from 'lucide-react-native'
 import { getEserler } from '../../lib/api'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import { COLORS, SHADOW } from '../../constants/theme'
@@ -71,9 +71,7 @@ export default function EserlerScreen() {
             {item.kapakFotoUrl ? (
               <Image source={{ uri: item.kapakFotoUrl }} style={styles.foto} resizeMode="cover" />
             ) : (
-              <View style={styles.fotoPh}>
-                <Text style={styles.emoji}>🏛️</Text>
-              </View>
+              <GorselPlaceholder icon={Landmark} size={110} iconSize={28} style={styles.foto} />
             )}
             <View style={styles.kartIcerik}>
               <Text style={styles.isim}>{item.isim}</Text>
@@ -101,12 +99,7 @@ export default function EserlerScreen() {
                   <View style={styles.modalOverlay} />
                 </>
               ) : (
-                <LinearGradient
-                  colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                  style={styles.modalFoto}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
+                <GorselPlaceholder icon={Landmark} size={280} iconSize={48} style={styles.modalFoto} />
               )}
               {secilen?.donem ? (
                 <View style={styles.donemBadge}>
@@ -218,14 +211,6 @@ const styles = StyleSheet.create({
     ...SHADOW,
   },
   foto: { width: 110, height: 110, backgroundColor: COLORS.BORDER },
-  fotoPh: {
-    width: 110,
-    height: 110,
-    backgroundColor: COLORS.PRIMARY_BG,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emoji: { fontSize: 32 },
   kartIcerik: { flex: 1, padding: 12, justifyContent: 'center' },
   isim: { fontSize: 14, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 3 },
   donem: { fontSize: 11, color: COLORS.PRIMARY, fontStyle: 'italic', marginBottom: 4 },

@@ -2,8 +2,18 @@ import { useEffect, useState } from 'react'
 import { api, getErrorMessage } from '../lib/api.js'
 import Spinner from '../components/Spinner.jsx'
 import DosyaYukleyici from '../components/DosyaYukleyici.jsx'
+import KonumSecici from '../components/KonumSecici.jsx'
 
-const KATEGORILER = ['RESTORAN', 'KAFE', 'PASTANE', 'SOKAK_LEZZETI', 'BAR']
+const KATEGORILER = ['RESTORAN', 'KAFE', 'PASTANE', 'SOKAK_LEZZETI', 'BAR', 'YEREL_URUN']
+
+const KATEGORI_ETIKET = {
+  RESTORAN: 'Restoran',
+  KAFE: 'Kafe',
+  PASTANE: 'Pastane',
+  SOKAK_LEZZETI: 'Sokak Lezzeti',
+  BAR: 'Bar',
+  YEREL_URUN: 'Yerel Ürün',
+}
 
 const emptyForm = {
   isim: '',
@@ -12,6 +22,8 @@ const emptyForm = {
   adres: '',
   telefon: '',
   kapakFotoUrl: '',
+  koordinatLat: null,
+  koordinatLng: null,
   yayinda: true,
 }
 
@@ -56,6 +68,8 @@ export default function YemeIcme() {
       adres: row.adres ?? '',
       telefon: row.telefon ?? '',
       kapakFotoUrl: row.kapakFotoUrl ?? '',
+      koordinatLat: row.koordinatLat != null ? Number(row.koordinatLat) : null,
+      koordinatLng: row.koordinatLng != null ? Number(row.koordinatLng) : null,
       yayinda: !!row.yayinda,
     })
     setModalOpen(true)
@@ -77,6 +91,8 @@ export default function YemeIcme() {
         aciklama: form.aciklama || null,
         adres: form.adres || null,
         telefon: form.telefon || null,
+        koordinatLat: form.koordinatLat ?? null,
+        koordinatLng: form.koordinatLng ?? null,
       }
       if (editingId) {
         await api.put(`/api/admin/yemeicme/${editingId}`, payload)
@@ -150,7 +166,7 @@ export default function YemeIcme() {
                 rows.map((r) => (
                   <tr key={r.id} className="hover:bg-slate-50/80">
                     <td className="px-4 py-3 font-medium text-slate-900">{r.isim}</td>
-                    <td className="px-4 py-3 text-slate-600">{r.kategori}</td>
+                    <td className="px-4 py-3 text-slate-600">{KATEGORI_ETIKET[r.kategori] || r.kategori}</td>
                     <td className="max-w-xs truncate px-4 py-3 text-slate-600">{r.adres || '—'}</td>
                     <td className="px-4 py-3">
                       <span
@@ -210,7 +226,7 @@ export default function YemeIcme() {
                 >
                   {KATEGORILER.map((k) => (
                     <option key={k} value={k}>
-                      {k}
+                      {KATEGORI_ETIKET[k] || k}
                     </option>
                   ))}
                 </select>
@@ -258,6 +274,28 @@ export default function YemeIcme() {
                     className="mt-2 w-full rounded border border-slate-300 px-3 py-2 text-sm"
                   />
                 </details>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Konum (haritadan işaretleyin)</label>
+                <KonumSecici
+                  lat={form.koordinatLat}
+                  lng={form.koordinatLng}
+                  onChange={(lat, lng) => setForm((f) => ({ ...f, koordinatLat: lat, koordinatLng: lng }))}
+                />
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-slate-600">
+                    {form.koordinatLat != null && form.koordinatLng != null
+                      ? `Seçili konum: ${Number(form.koordinatLat).toFixed(4)}, ${Number(form.koordinatLng).toFixed(4)}`
+                      : 'Henüz konum seçilmedi'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, koordinatLat: null, koordinatLng: null }))}
+                    className="text-sm font-medium text-red-800 hover:underline"
+                  >
+                    Konumu Temizle
+                  </button>
+                </div>
               </div>
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input

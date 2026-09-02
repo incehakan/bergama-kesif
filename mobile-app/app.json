@@ -2,7 +2,7 @@
   "expo": {
     "name": "Keşif Bergama",
     "slug": "kesif-bergama",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "kesif-bergama",
     "platforms": [
       "ios",
@@ -11,7 +11,21 @@
     "orientation": "portrait",
     "plugins": [
       "expo-router",
-      "expo-camera"
+      "expo-camera",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Haritada konumunuzu göstermek için konum izni gerekir."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "http://45.43.152.58:3001",
@@ -21,9 +35,19 @@
         "projectId": "7ba180b5-c5c7-4a98-b665-895296970c3f"
       }
     },
+    "ios": {
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Haritada konumunuzu göstermek için konum izni gerekir.",
+        "LSApplicationQueriesSchemes": ["comgooglemaps", "googlemaps"]
+      }
+    },
     "android": {
       "usesCleartextTraffic": true,
-      "package": "com.kesif.bergama"
+      "package": "com.kesif.bergama",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     }
   }
 }

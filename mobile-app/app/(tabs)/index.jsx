@@ -13,7 +13,11 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import * as Linking from 'expo-linking'
+import { ChevronRight, Landmark, Navigation, Phone, Pill, Siren } from 'lucide-react-native'
 import { getBaskan, getEtkinlikler, getEserler, getHaberler } from '../../lib/api'
+import { eczaneMapsUrl, eczaneTelUrl, getNobetciEczaneler } from '../../lib/eczaneler'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import { COLORS, SHADOW } from '../../constants/theme'
@@ -58,6 +62,39 @@ export default function AnaSayfa() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [baskanModal, setBaskanModal] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [nobetciEczane, setNobetciEczane] = useState(null)
+  const [nobetciYukleniyor, setNobetciYukleniyor] = useState(true)
+
+  const MENU_ITEMS = [
+    {
+      key: 'acil-durum',
+      label: 'Acil Durum',
+      icon: Siren,
+      onPress: () => {
+        setMenuOpen(false)
+        setTimeout(() => router.push('/acil-durum'), 80)
+      },
+    },
+    {
+      key: 'iletisim',
+      label: 'İletişim',
+      icon: Phone,
+      onPress: () => {
+        setMenuOpen(false)
+        setTimeout(() => router.push('/iletisim'), 80)
+      },
+    },
+    {
+      key: 'nobetci-eczaneler',
+      label: 'Nöbetçi Eczaneler',
+      icon: Pill,
+      onPress: () => {
+        setMenuOpen(false)
+        setTimeout(() => router.push('/nobetci-eczaneler'), 80)
+      },
+    },
+  ]
 
   const load = useCallback(async () => {
     setError(null)
@@ -105,6 +142,26 @@ export default function AnaSayfa() {
     load()
   }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    async function loadNobetci() {
+      setNobetciYukleniyor(true)
+      try {
+        const rows = await getNobetciEczaneler()
+        if (cancelled) return
+        setNobetciEczane(Array.isArray(rows) && rows[0] ? rows[0] : null)
+      } catch {
+        if (!cancelled) setNobetciEczane(null)
+      } finally {
+        if (!cancelled) setNobetciYukleniyor(false)
+      }
+    }
+    loadNobetci()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   if (loading) {
     return (
       <ScreenChrome>
@@ -128,12 +185,7 @@ export default function AnaSayfa() {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.PRIMARY} translucent={Platform.OS === 'android'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollRoot}>
         <View style={styles.hero}>
-          <TouchableOpacity style={styles.hamBtn} activeOpacity={0.75} hitSlop={12}>
-            <View style={styles.hamLine} />
-            <View style={[styles.hamLine, { marginTop: 5 }]} />
-            <View style={[styles.hamLine, { marginTop: 5 }]} />
-          </TouchableOpacity>
-          <View style={styles.heroContent}>
+          <View style={styles.heroContent} pointerEvents="box-none">
             <Text style={styles.bergama}>BERGAMA</Text>
             <View style={styles.heroLine} />
             <Text style={styles.heroSub}>TARİHİN İZİNDE KEŞFET</Text>
@@ -142,7 +194,17 @@ export default function AnaSayfa() {
               <Text style={styles.heroInfo}>🏛 UNESCO Mirası</Text>
             </View>
           </View>
-          <View style={styles.wave} />
+          <View style={styles.wave} pointerEvents="none" />
+          <TouchableOpacity
+            style={styles.hamBtn}
+            onPress={() => setMenuOpen(true)}
+            activeOpacity={0.75}
+            hitSlop={16}
+          >
+            <View style={styles.hamLine} />
+            <View style={[styles.hamLine, { marginTop: 5 }]} />
+            <View style={[styles.hamLine, { marginTop: 5 }]} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.scrollPad}>
@@ -159,6 +221,52 @@ export default function AnaSayfa() {
               <Text style={styles.qrSub}>Tarihi eserleri keşfet</Text>
             </View>
           </TouchableOpacity>
+
+          {!nobetciYukleniyor && nobetciEczane ? (
+            <TouchableOpacity
+              style={styles.eczCard}
+              onPress={() => router.push('/nobetci-eczaneler')}
+              activeOpacity={0.75}
+            >
+              <View style={styles.eczIconBox}>
+                <Pill size={18} color={COLORS.WHITE} strokeWidth={2.3} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.eczLabel}>BUGÜNÜN NÖBETÇİ ECZANESİ</Text>
+                <Text style={styles.eczName} numberOfLines={1}>
+                  {nobetciEczane.Adi || 'Eczane'}
+                </Text>
+                <Text style={styles.eczAddr} numberOfLines={2}>
+                  {nobetciEczane.Adres || 'Adres yok'}
+                </Text>
+              </View>
+              <View style={styles.eczActions}>
+                {eczaneTelUrl(nobetciEczane) ? (
+                  <TouchableOpacity
+                    style={styles.eczMini}
+                    onPress={() => {
+                      const url = eczaneTelUrl(nobetciEczane)
+                      if (url) Linking.openURL(url).catch(() => {})
+                    }}
+                    activeOpacity={0.75}
+                    hitSlop={8}
+                  >
+                    <Phone size={16} color={COLORS.PRIMARY} strokeWidth={2.4} />
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity
+                  style={styles.eczMini}
+                  onPress={() => {
+                    Linking.openURL(eczaneMapsUrl(nobetciEczane)).catch(() => {})
+                  }}
+                  activeOpacity={0.75}
+                  hitSlop={8}
+                >
+                  <Navigation size={16} color={COLORS.PRIMARY} strokeWidth={2.4} />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ) : null}
 
           {baskan ? (
             <TouchableOpacity
@@ -249,12 +357,21 @@ export default function AnaSayfa() {
                       </View>
                     </ImageBackground>
                   ) : (
-                    <View style={[styles.eserCardInner, { backgroundColor: COLORS.PRIMARY_DARK }]}>
+                    <View style={styles.eserCardInner}>
+                      <GorselPlaceholder
+                        icon={Landmark}
+                        size={170}
+                        iconSize={36}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={[styles.eserFade, { backgroundColor: 'rgba(0,0,0,0.08)' }]} />
                       <View style={styles.eserTextBlock}>
-                        <Text style={styles.eserName} numberOfLines={2}>
+                        <Text style={[styles.eserName, styles.eserNameOnPlaceholder]} numberOfLines={2}>
                           {es.isim}
                         </Text>
-                        {es.donem ? <Text style={styles.eserDonem}>{es.donem}</Text> : null}
+                        {es.donem ? (
+                          <Text style={[styles.eserDonem, styles.eserDonemOnPlaceholder]}>{es.donem}</Text>
+                        ) : null}
                       </View>
                     </View>
                   )}
@@ -288,6 +405,37 @@ export default function AnaSayfa() {
         </View>
       </ScrollView>
 
+      <Modal visible={menuOpen} transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
+        <View style={styles.modalBg}>
+          <TouchableOpacity style={styles.menuDismiss} activeOpacity={1} onPress={() => setMenuOpen(false)} />
+          <View style={styles.modalBox}>
+            <Text style={styles.menuTitle}>Menü</Text>
+            {MENU_ITEMS.map((item) => {
+              const Icon = item.icon
+              return (
+                <TouchableOpacity
+                  key={item.key}
+                  style={styles.menuRow}
+                  onPress={item.onPress}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.menuIconBox}>
+                    <Icon size={18} color={COLORS.PRIMARY} strokeWidth={2.2} />
+                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <View style={styles.menuArrow}>
+                    <ChevronRight size={18} color={COLORS.PRIMARY} strokeWidth={2.5} />
+                  </View>
+                </TouchableOpacity>
+              )
+            })}
+            <TouchableOpacity style={styles.modalClose} onPress={() => setMenuOpen(false)} activeOpacity={0.75}>
+              <Text style={styles.modalCloseTxt}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={baskanModal} transparent animationType="slide" onRequestClose={() => setBaskanModal(false)}>
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
@@ -317,7 +465,14 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'visible',
   },
-  hamBtn: { position: 'absolute', top: 12, right: 16, zIndex: 3, padding: 4 },
+  hamBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    zIndex: 20,
+    elevation: 20,
+    padding: 8,
+  },
   hamLine: { width: 22, height: 2, backgroundColor: COLORS.WHITE, borderRadius: 1 },
   heroContent: {
     flex: 1,
@@ -378,6 +533,45 @@ const styles = StyleSheet.create({
   },
   qrTitle: { color: COLORS.WHITE, fontWeight: '700', fontSize: 13 },
   qrSub: { marginTop: 4, color: 'rgba(255,255,255,0.45)', fontSize: 9 },
+  eczCard: {
+    backgroundColor: COLORS.BG_CARD,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 16,
+    marginBottom: 18,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    ...SHADOW,
+  },
+  eczIconBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: COLORS.PRIMARY,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eczLabel: {
+    fontSize: 8,
+    color: COLORS.PRIMARY,
+    letterSpacing: 1.2,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  eczName: { fontSize: 13, fontWeight: '800', color: COLORS.TEXT_1 },
+  eczAddr: { marginTop: 4, fontSize: 10, color: COLORS.TEXT_3, lineHeight: 14 },
+  eczActions: { flexDirection: 'column', gap: 8 },
+  eczMini: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.PRIMARY_BG,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   baskanCard: {
     marginHorizontal: 16,
     marginBottom: 18,
@@ -474,7 +668,9 @@ const styles = StyleSheet.create({
   },
   eserTextBlock: { padding: 10, zIndex: 1 },
   eserName: { fontSize: 11, fontWeight: '800', color: COLORS.WHITE },
+  eserNameOnPlaceholder: { color: COLORS.TEXT_1 },
   eserDonem: { marginTop: 4, fontSize: 9, fontWeight: '700', color: COLORS.PRIMARY_LIGHT },
+  eserDonemOnPlaceholder: { color: COLORS.TEXT_2 },
   haberBlock: { paddingHorizontal: 16, gap: 10 },
   haberRow: {
     borderLeftWidth: 3,
@@ -490,6 +686,37 @@ const styles = StyleSheet.create({
   },
   haberTitle: { fontSize: 12, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 4 },
   haberDate: { fontSize: 9, color: COLORS.PRIMARY, fontWeight: '600' },
+  menuDismiss: { flex: 1 },
+  menuTitle: { fontSize: 20, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 14 },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.BG_CARD,
+    borderRadius: 14,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    marginBottom: 8,
+    ...SHADOW,
+  },
+  menuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: COLORS.PRIMARY_BG,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: COLORS.TEXT_1 },
+  menuArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: COLORS.PRIMARY_BG,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   modalBox: {
     backgroundColor: COLORS.BG_CARD,

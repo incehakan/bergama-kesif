@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Tarihce from './pages/Tarihce.jsx'
 import Baskan from './pages/Baskan.jsx'
+import Iletisim from './pages/Iletisim.jsx'
 import YemeIcme from './pages/YemeIcme.jsx'
 import Rotalar from './pages/Rotalar.jsx'
 import Etkinlikler from './pages/Etkinlikler.jsx'
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/tarihce" element={<Tarihce />} />
             <Route path="/baskan" element={<Baskan />} />
+            <Route path="/iletisim" element={<Iletisim />} />
             <Route path="/yeme-icme" element={<YemeIcme />} />
             <Route path="/rotalar" element={<Rotalar />} />
             <Route path="/etkinlikler" element={<Etkinlikler />} />

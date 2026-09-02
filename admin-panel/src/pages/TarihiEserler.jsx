@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, getErrorMessage } from '../lib/api.js'
 import Spinner from '../components/Spinner.jsx'
 import DosyaYukleyici from '../components/DosyaYukleyici.jsx'
+import KonumSecici from '../components/KonumSecici.jsx'
 import QRPrint from '../components/QRPrint.jsx'
 
 const emptyForm = {
@@ -12,6 +13,8 @@ const emptyForm = {
   kapakFotoUrl: '',
   videoUrl: '',
   ekVideolar: [],
+  koordinatLat: null,
+  koordinatLng: null,
   yayinda: true,
 }
 
@@ -63,6 +66,8 @@ export default function TarihiEserler() {
       kapakFotoUrl: row.kapakFotoUrl ?? '',
       videoUrl: row.videoUrl ?? '',
       ekVideolar: Array.isArray(row.ekVideolar) ? [...row.ekVideolar] : [],
+      koordinatLat: row.koordinatLat != null ? Number(row.koordinatLat) : null,
+      koordinatLng: row.koordinatLng != null ? Number(row.koordinatLng) : null,
       yayinda: !!row.yayinda,
     })
     setModalOpen(true)
@@ -89,6 +94,8 @@ export default function TarihiEserler() {
         kapakFotoUrl: form.kapakFotoUrl || null,
         videoUrl: form.videoUrl || null,
         ekVideolar,
+        koordinatLat: form.koordinatLat ?? null,
+        koordinatLng: form.koordinatLng ?? null,
         yayinda: form.yayinda,
       }
       if (editingId) {
@@ -370,6 +377,28 @@ export default function TarihiEserler() {
                       </details>
                     </div>
                   ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Konum (haritadan işaretleyin)</label>
+                <KonumSecici
+                  lat={form.koordinatLat}
+                  lng={form.koordinatLng}
+                  onChange={(lat, lng) => setForm((f) => ({ ...f, koordinatLat: lat, koordinatLng: lng }))}
+                />
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-slate-600">
+                    {form.koordinatLat != null && form.koordinatLng != null
+                      ? `Seçili konum: ${Number(form.koordinatLat).toFixed(4)}, ${Number(form.koordinatLng).toFixed(4)}`
+                      : 'Henüz konum seçilmedi'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, koordinatLat: null, koordinatLng: null }))}
+                    className="text-sm font-medium text-red-800 hover:underline"
+                  >
+                    Konumu Temizle
+                  </button>
                 </div>
               </div>
               <label className="flex items-center gap-2 text-sm text-slate-700">

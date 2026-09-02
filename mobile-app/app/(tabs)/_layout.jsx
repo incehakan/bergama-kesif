@@ -3,6 +3,7 @@ import {
   Home,
   BookOpen,
   MapPin,
+  Map,
   UtensilsCrossed,
   Newspaper,
   Landmark,
@@ -26,7 +27,7 @@ export default function TabLayout() {
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: '600',
         },
       }}
@@ -50,6 +51,13 @@ export default function TabLayout() {
         options={{
           title: 'Rotalar',
           tabBarIcon: ({ color }) => <MapPin size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="harita"
+        options={{
+          title: 'Harita',
+          tabBarIcon: ({ color }) => <Map size={22} color={color} />,
         }}
       />
       <Tabs.Screen

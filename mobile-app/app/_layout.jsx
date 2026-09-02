@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler'
+import '../lib/fetchPolyfill'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -20,6 +21,9 @@ export default function RootLayout() {
           <Stack.Screen name="eser/[id]" />
           <Stack.Screen name="vr/[id]" />
           <Stack.Screen name="haber/[id]" />
+          <Stack.Screen name="acil-durum" />
+          <Stack.Screen name="iletisim" />
+          <Stack.Screen name="nobetci-eczaneler" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

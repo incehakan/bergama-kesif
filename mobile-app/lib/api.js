@@ -41,13 +41,20 @@ function normalizeMediaUrls(value, parentKey = '') {
 }
 
 async function request(path, options = {}) {
-  const res = await fetch(buildUrl(path), {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      ...options.headers,
-    },
-  })
+  const url = buildUrl(path)
+  let res
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers: {
+        Accept: 'application/json',
+        ...options.headers,
+      },
+    })
+  } catch (e) {
+    const detail = e?.message || 'Network request failed'
+    throw new Error(`${detail}\n${url}`)
+  }
 
   if (!res.ok) {
     let message = 'İstek başarısız'
@@ -102,6 +109,14 @@ export function getTarihce() {
 
 export function getBaskan() {
   return request(`/api/public/${SLUG}/baskan`)
+}
+
+export function getIletisim() {
+  return request(`/api/public/${SLUG}/iletisim`)
+}
+
+export function getHaritaNoktalari() {
+  return request(`/api/public/${SLUG}/harita`)
 }
 
 export function getEserler() {

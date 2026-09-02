@@ -9,12 +9,13 @@ import {
   Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Video, ResizeMode } from 'expo-av'
-import { Play, Glasses } from 'lucide-react-native'
+import { Glasses, Landmark, Play } from 'lucide-react-native'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
+import { getEserler } from '../../lib/api'
 import { COLORS } from '../../constants/theme'
 
 export default function EserDetayScreen() {
@@ -39,6 +40,12 @@ export default function EserDetayScreen() {
           setEser(data)
           return
         }
+      }
+      const list = await getEserler()
+      const found = (Array.isArray(list) ? list : []).find((e) => String(e.id) === String(id))
+      if (found) {
+        setEser(found)
+        return
       }
       setError('Eser verisi bulunamadı. Lütfen QR kod ile tekrar deneyin.')
       setEser(null)
@@ -85,19 +92,16 @@ export default function EserDetayScreen() {
                 <View style={styles.coverOverlay} />
               </>
             ) : (
-              <LinearGradient
-                colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                style={styles.cover}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
+              <GorselPlaceholder icon={Landmark} size={280} iconSize={48} style={styles.cover} />
             )}
             {eser.donem ? (
               <View style={styles.periodBadge}>
                 <Text style={styles.periodBadgeTxt}>{eser.donem}</Text>
               </View>
             ) : null}
-            <Text style={styles.coverTitle}>{eser.isim}</Text>
+            <Text style={[styles.coverTitle, !eser.kapakFotoUrl && styles.coverTitleOnPlaceholder]}>
+              {eser.isim}
+            </Text>
           </View>
 
           <View style={styles.sheet}>
@@ -182,6 +186,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: COLORS.WHITE,
   },
+  coverTitleOnPlaceholder: { color: COLORS.TEXT_1 },
   sheet: {
     backgroundColor: COLORS.WHITE,
     borderTopLeftRadius: 20,

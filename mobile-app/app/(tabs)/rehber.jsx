@@ -10,10 +10,11 @@ import {
   StyleSheet,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import * as Linking from 'expo-linking'
-import { ChevronRight, Navigation } from 'lucide-react-native'
+import { ChevronRight, UtensilsCrossed } from 'lucide-react-native'
 import { getAllYemeIcme } from '../../lib/api'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
+import HaritaButonu from '../../components/HaritaButonu'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import { COLORS, SHADOW } from '../../constants/theme'
@@ -24,22 +25,8 @@ const FILTERS = [
   { label: 'Kafe', value: 'KAFE' },
   { label: 'Pastane', value: 'PASTANE' },
   { label: 'Sokak Lezzeti', value: 'SOKAK_LEZZETI' },
+  { label: 'Yerel Ürünler', value: 'YEREL_URUN' },
 ]
-
-function buildMekanMapsUrl(detay) {
-  const lat = detay?.koordinatLat
-  const lng = detay?.koordinatLng
-  if (lat != null && lng != null) {
-    const la = Number(lat)
-    const ln = Number(lng)
-    if (Number.isFinite(la) && Number.isFinite(ln)) {
-      return `https://www.google.com/maps/dir/?api=1&destination=${la},${ln}`
-    }
-  }
-  const name = detay?.isim || 'Mekan'
-  const query = encodeURIComponent(`${name} Bergama`)
-  return `https://www.google.com/maps/search/?api=1&query=${query}`
-}
 
 export default function RehberScreen() {
   const [kategori, setKategori] = useState(null)
@@ -75,15 +62,6 @@ export default function RehberScreen() {
     }
   }
 
-  async function openMaps() {
-    if (!detay) return
-    try {
-      await Linking.openURL(buildMekanMapsUrl(detay))
-    } catch {
-      /* */
-    }
-  }
-
   const chrome = (body) => (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
       <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
@@ -97,7 +75,7 @@ export default function RehberScreen() {
     chrome(
       <>
       <View style={styles.top}>
-        <Text style={styles.topLabel}>MEKANLAR</Text>
+        <Text style={styles.topLabel}>MEKANLAR & ÜRÜNLER</Text>
         <Text style={styles.topTitle}>Rehber</Text>
         <ScrollView
           horizontal
@@ -136,12 +114,7 @@ export default function RehberScreen() {
             {item.kapakFotoUrl ? (
               <Image source={{ uri: item.kapakFotoUrl }} style={styles.thumb} resizeMode="cover" />
             ) : (
-              <LinearGradient
-                colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                style={styles.thumb}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
+              <GorselPlaceholder icon={UtensilsCrossed} size={56} iconSize={22} style={styles.thumb} />
             )}
             <View style={styles.cardMid}>
               <Text style={styles.name}>{item.isim}</Text>
@@ -166,20 +139,17 @@ export default function RehberScreen() {
               {detay?.kapakFotoUrl ? (
                 <Image source={{ uri: detay.kapakFotoUrl }} style={styles.modalCover} resizeMode="cover" />
               ) : (
-                <LinearGradient
-                  colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                  style={styles.modalCover}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
+                <GorselPlaceholder icon={UtensilsCrossed} size={220} iconSize={48} style={styles.modalCover} />
               )}
               <View style={styles.modalSheet}>
                 <Text style={styles.modalName}>{detay?.isim}</Text>
                 {detay?.aciklama ? <Text style={styles.modalDesc}>{detay.aciklama}</Text> : null}
-                <TouchableOpacity style={styles.dirBtn} onPress={openMaps} activeOpacity={0.75}>
-                  <Navigation size={18} color={COLORS.WHITE} />
-                  <Text style={styles.dirBtnTxt}>Google Haritalar ile Yol Tarifi</Text>
-                </TouchableOpacity>
+                <HaritaButonu
+                  lat={detay?.koordinatLat}
+                  lng={detay?.koordinatLng}
+                  label={detay?.isim || 'Mekan'}
+                  style={{ marginBottom: 10 }}
+                />
                 {detay?.telefon ? (
                   <TouchableOpacity style={styles.telBtn} onPress={openTel} activeOpacity={0.75}>
                     <Text style={styles.telBtnTxt}>Ara: {detay.telefon}</Text>
@@ -273,17 +243,6 @@ const styles = StyleSheet.create({
   },
   modalName: { fontSize: 18, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 4 },
   modalDesc: { fontSize: 13, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 14 },
-  dirBtn: {
-    backgroundColor: COLORS.PRIMARY,
-    borderRadius: 12,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-  dirBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 11, flexShrink: 1 },
   telBtn: {
     backgroundColor: '#25D366',
     borderRadius: 12,

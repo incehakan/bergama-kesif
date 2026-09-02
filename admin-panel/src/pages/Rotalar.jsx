@@ -2,8 +2,36 @@ import { useEffect, useState } from 'react'
 import { api, getErrorMessage } from '../lib/api.js'
 import Spinner from '../components/Spinner.jsx'
 import DosyaYukleyici from '../components/DosyaYukleyici.jsx'
+import RotaDurakSecici from '../components/RotaDurakSecici.jsx'
 
 const ZORLUK = ['KOLAY', 'ORTA', 'ZOR']
+
+function normalizeRotaDuraklar(raw) {
+  if (raw == null) return []
+  let list = []
+  if (Array.isArray(raw)) list = raw
+  else if (typeof raw === 'object') {
+    list = raw.duraklar || raw.stops || raw.points || raw.items || []
+  }
+  if (!Array.isArray(list)) return []
+  return list
+    .map((d, i) => {
+      if (!d || typeof d !== 'object') return null
+      const lat = Number(d.lat ?? d.latitude ?? d.koordinatLat ?? d.koordinat?.lat)
+      const lng = Number(d.lng ?? d.lon ?? d.longitude ?? d.koordinatLng ?? d.koordinat?.lng)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+      return {
+        sira: d.sira ?? i + 1,
+        ad: d.ad || d.isim || d.name || `Durak ${i + 1}`,
+        lat,
+        lng,
+        kaynakTipi: d.kaynakTipi || 'ozel',
+        kaynakId: d.kaynakId ?? null,
+      }
+    })
+    .filter(Boolean)
+    .map((d, i) => ({ ...d, sira: i + 1 }))
+}
 
 const emptyForm = {
   baslik: '',
@@ -51,10 +79,6 @@ export default function Rotalar() {
 
   function openEdit(row) {
     setEditingId(row.id)
-    const duraklar =
-      row.rotaDuraklar !== undefined && row.rotaDuraklar !== null
-        ? row.rotaDuraklar
-        : []
     setForm({
       baslik: row.baslik ?? '',
       kisaAciklama: row.kisaAciklama ?? '',
@@ -64,7 +88,7 @@ export default function Rotalar() {
       zorluk: row.zorluk ?? 'KOLAY',
       kapakFotoUrl: row.kapakFotoUrl ?? '',
       yayinda: !!row.yayinda,
-      rotaDuraklar: duraklar,
+      rotaDuraklar: normalizeRotaDuraklar(row.rotaDuraklar),
     })
     setModalOpen(true)
   }
@@ -206,7 +230,7 @@ export default function Rotalar() {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold text-slate-900">
               {editingId ? 'Rotayı Düzenle' : 'Yeni Rota'}
             </h2>
@@ -302,11 +326,10 @@ export default function Rotalar() {
                 />
                 Yayında
               </label>
-              <p className="text-xs text-slate-500">
-                {editingId
-                  ? 'Mevcut rota durakları korunur; harita düzenleyicisi sonra eklenebilir.'
-                  : 'Yeni rota için durak listesi boş başlar; harita düzenleyicisi sonra eklenebilir.'}
-              </p>
+              <RotaDurakSecici
+                duraklar={form.rotaDuraklar}
+                onChange={(d) => setForm((f) => ({ ...f, rotaDuraklar: d }))}
+              />
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"

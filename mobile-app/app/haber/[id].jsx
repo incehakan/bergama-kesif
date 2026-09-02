@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { Newspaper } from 'lucide-react-native'
 import { getHaberDetay } from '../../lib/api'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import { COLORS } from '../../constants/theme'
@@ -66,12 +67,7 @@ export default function HaberDetayScreen() {
             {data.kapakFotoUrl ? (
               <Image source={{ uri: data.kapakFotoUrl }} style={styles.cover} resizeMode="cover" />
             ) : (
-              <LinearGradient
-                colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                style={styles.cover}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
+              <GorselPlaceholder icon={Newspaper} size={250} iconSize={48} style={styles.cover} />
             )}
           </View>
           <View style={styles.body}>

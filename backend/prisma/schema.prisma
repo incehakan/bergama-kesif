@@ -18,8 +18,9 @@ model Belediye {
 
   kullanicilar Kullanici[]
   tarihce      Tarihce[]
-  baskanMesaji BaskanMesaji[]
-  yemeIcme     YemeIcme[]
+  baskanMesaji     BaskanMesaji[]
+  iletisimBilgisi  IletisimBilgisi[]
+  yemeIcme         YemeIcme[]
   rotalar      TurizmRotasi[]
   etkinlikler  Etkinlik[]
   haberler     Haber[]
@@ -69,6 +70,19 @@ model BaskanMesaji {
   guncelleme  DateTime @updatedAt
 }
 
+model IletisimBilgisi {
+  id           Int      @id @default(autoincrement())
+  telefon      String?
+  eposta       String?
+  adres        String?
+  whatsapp     String?
+  koordinatLat Float?
+  koordinatLng Float?
+  belediyeId   Int
+  belediye     Belediye @relation(fields: [belediyeId], references: [id])
+  guncelleme   DateTime @updatedAt
+}
+
 model YemeIcme {
   id            Int       @id @default(autoincrement())
   isim          String
@@ -93,6 +107,7 @@ enum YKategori {
   PASTANE
   SOKAK_LEZZETI
   BAR
+  YEREL_URUN
 }
 
 model TurizmRotasi {

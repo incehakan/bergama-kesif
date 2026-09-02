@@ -11,9 +11,12 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
-import * as Linking from 'expo-linking'
-import { Map } from 'lucide-react-native'
+import { WebView } from 'react-native-webview'
+import { Mountain } from 'lucide-react-native'
 import { getRotalar } from '../../lib/api'
+import { buildRouteMapHtml } from '../../lib/leafletWebMap'
+import GorselPlaceholder from '../../components/GorselPlaceholder'
+import HaritaButonu from '../../components/HaritaButonu'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import { COLORS, SHADOW } from '../../constants/theme'
@@ -25,48 +28,57 @@ function zorlukRenk(z) {
   return COLORS.DARK_2
 }
 
-function extractFirstStopCoords(rotaDuraklar) {
-  if (rotaDuraklar == null) return null
-  let list = []
-  if (Array.isArray(rotaDuraklar)) list = rotaDuraklar
-  else if (typeof rotaDuraklar === 'object') {
-    list =
-      rotaDuraklar.duraklar ||
-      rotaDuraklar.stops ||
-      rotaDuraklar.points ||
-      rotaDuraklar.items ||
-      []
+function extractAllStops(rotaDuraklar) {
+  if (rotaDuraklar == null) return []
+
+  let raw = rotaDuraklar
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw)
+    } catch {
+      return []
+    }
   }
-  if (!Array.isArray(list) || list.length === 0) return null
-  const first = list[0]
-  if (!first || typeof first !== 'object') return null
-  const lat =
-    first.lat ??
-    first.latitude ??
-    first.koordinatLat ??
-    (first.koordinat && first.koordinat.lat)
-  const lng =
-    first.lng ??
-    first.lon ??
-    first.longitude ??
-    first.koordinatLng ??
-    (first.koordinat && first.koordinat.lng)
-  if (lat == null || lng == null) return null
-  const la = Number(lat)
-  const ln = Number(lng)
-  if (!Number.isFinite(la) || !Number.isFinite(ln)) return null
-  return { lat: la, lng: ln }
+
+  let list = []
+  if (Array.isArray(raw)) list = raw
+  else if (raw && typeof raw === 'object') {
+    list = raw.duraklar || raw.stops || raw.points || raw.items || []
+  }
+  if (!Array.isArray(list)) return []
+
+  return list
+    .map((stop, index) => {
+      if (!stop || typeof stop !== 'object') return null
+      const lat =
+        stop.lat ??
+        stop.latitude ??
+        stop.koordinatLat ??
+        (stop.koordinat && stop.koordinat.lat)
+      const lng =
+        stop.lng ??
+        stop.lon ??
+        stop.longitude ??
+        stop.koordinatLng ??
+        (stop.koordinat && stop.koordinat.lng)
+      const la = Number(lat)
+      const ln = Number(lng)
+      if (!Number.isFinite(la) || !Number.isFinite(ln)) return null
+      const sira = Number(stop.sira)
+      return {
+        sira: Number.isFinite(sira) ? sira : index + 1,
+        lat: la,
+        lng: ln,
+        ad: stop.ad || stop.isim || stop.name || '',
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.sira - b.sira)
 }
 
-function buildRotaGoogleUrl(rota) {
-  const coords = extractFirstStopCoords(rota?.rotaDuraklar)
-  if (coords) {
-    const q = encodeURIComponent(`${coords.lat},${coords.lng}`)
-    return `https://www.google.com/maps/search/?api=1&query=${q}`
-  }
-  const name = rota?.baslik || 'Rota'
-  const query = encodeURIComponent(`${name} Bergama`)
-  return `https://www.google.com/maps/search/?api=1&query=${query}`
+function extractFirstStopCoords(rotaDuraklar) {
+  const all = extractAllStops(rotaDuraklar)
+  return all[0] || null
 }
 
 export default function RotalarScreen() {
@@ -92,14 +104,8 @@ export default function RotalarScreen() {
     load()
   }, [load])
 
-  async function openMaps() {
-    if (!secili) return
-    try {
-      await Linking.openURL(buildRotaGoogleUrl(secili))
-    } catch {
-      /* */
-    }
-  }
+  const seciliDuraklar = secili ? extractAllStops(secili.rotaDuraklar) : []
+  const seciliIlkDurak = secili ? extractFirstStopCoords(secili.rotaDuraklar) : null
 
   const chrome = (body) => (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
@@ -137,14 +143,19 @@ export default function RotalarScreen() {
                     <View style={styles.imgOverlay} />
                   </>
                 ) : (
-                  <LinearGradient
-                    colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                    style={styles.img}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
+                  <>
+                    <GorselPlaceholder icon={Mountain} size={160} iconSize={30} />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.12)']}
+                      style={styles.cardTitleFade}
+                      pointerEvents="none"
+                    />
+                  </>
                 )}
-                <Text style={styles.cardTitle} numberOfLines={2}>
+                <Text
+                  style={[styles.cardTitle, !item.kapakFotoUrl && styles.cardTitleOnPlaceholder]}
+                  numberOfLines={2}
+                >
                   {item.baslik}
                 </Text>
                 <View style={[styles.zBadge, { backgroundColor: badgeBg }]}>
@@ -172,12 +183,7 @@ export default function RotalarScreen() {
                 {secili?.kapakFotoUrl ? (
                   <Image source={{ uri: secili.kapakFotoUrl }} style={styles.modalImg} resizeMode="cover" />
                 ) : (
-                  <LinearGradient
-                    colors={[COLORS.PRIMARY, COLORS.PRIMARY_DARK]}
-                    style={styles.modalImg}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  />
+                  <GorselPlaceholder icon={Mountain} size={260} iconSize={48} />
                 )}
               </View>
               <View style={styles.modalSheet}>
@@ -197,11 +203,30 @@ export default function RotalarScreen() {
                 ) : null}
               </View>
             </ScrollView>
+            {seciliDuraklar.length >= 2 ? (
+              <View style={styles.miniMap}>
+                <WebView
+                  originWhitelist={['*']}
+                  source={{
+                    html: buildRouteMapHtml({
+                      stops: seciliDuraklar,
+                      color: COLORS.PRIMARY,
+                    }),
+                  }}
+                  style={styles.miniWeb}
+                  javaScriptEnabled
+                  scrollEnabled={false}
+                  nestedScrollEnabled={false}
+                  setSupportMultipleWindows={false}
+                />
+              </View>
+            ) : null}
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.mapsBtn} onPress={openMaps} activeOpacity={0.75}>
-                <Map size={20} color={COLORS.WHITE} />
-                <Text style={styles.mapsBtnText}>{"Google Haritalar'da Aç"}</Text>
-              </TouchableOpacity>
+              <HaritaButonu
+                lat={seciliIlkDurak?.lat}
+                lng={seciliIlkDurak?.lng}
+                label={secili?.baslik || 'Rota'}
+              />
               <TouchableOpacity style={styles.closeBtn} onPress={() => setSecili(null)} activeOpacity={0.75}>
                 <Text style={styles.closeBtnText}>Kapat</Text>
               </TouchableOpacity>
@@ -232,8 +257,15 @@ const styles = StyleSheet.create({
     ...SHADOW,
   },
   cardImg: { height: 160, position: 'relative' },
-  img: { width: '100%', height: 160, backgroundColor: COLORS.PRIMARY },
+  img: { width: '100%', height: 160, backgroundColor: COLORS.BORDER },
   imgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+  cardTitleFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 64,
+  },
   cardTitle: {
     position: 'absolute',
     left: 12,
@@ -242,6 +274,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: COLORS.WHITE,
+  },
+  cardTitleOnPlaceholder: {
+    color: COLORS.TEXT_1,
   },
   zBadge: {
     position: 'absolute',
@@ -284,16 +319,17 @@ const styles = StyleSheet.create({
   modalMetaTxt: { fontSize: 12, color: COLORS.TEXT_2, flex: 1 },
   modalLead: { fontSize: 14, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 8 },
   modalBody: { fontSize: 14, color: COLORS.TEXT_2, lineHeight: 24 },
-  mapsBtn: {
-    backgroundColor: COLORS.DARK,
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  miniMap: {
+    marginHorizontal: 16,
+    marginTop: 4,
+    height: 220,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    backgroundColor: COLORS.BG,
   },
-  mapsBtnText: { color: COLORS.WHITE, fontWeight: '800', fontSize: 12 },
+  miniWeb: { width: '100%', height: 220, backgroundColor: COLORS.BG },
   closeBtn: {
     backgroundColor: COLORS.PRIMARY,
     borderRadius: 12,
