@@ -17,7 +17,10 @@ import { getEserler } from '../../lib/api'
 import GorselPlaceholder from '../../components/GorselPlaceholder'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import ScreenPage from '../../components/ScreenPage'
+import ScreenHeader from '../../components/ScreenHeader'
+import ListCard from '../../components/ListCard'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../../constants/theme'
 
 export default function EserlerScreen() {
   const [eserler, setEserler] = useState([])
@@ -44,18 +47,24 @@ export default function EserlerScreen() {
     yukle()
   }, [yukle])
 
-  const chrome = (body) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
-    </SafeAreaView>
-  )
-
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={yukle} />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        <ErrorView message={error} onRetry={yukle} />
+      </ScreenPage>
+    )
+  }
 
   return (
-    chrome(
-      <>
+    <ScreenPage>
+      <ScreenHeader title="Eserler" subtitle="TARİHİ MİRAS" />
       <View style={styles.banner}>
         <QrCode size={22} color={COLORS.PRIMARY} strokeWidth={2} />
         <Text style={styles.bannerTxt}>QR kodları okutarak tam deneyime ulaşın</Text>
@@ -67,25 +76,20 @@ export default function EserlerScreen() {
         contentContainerStyle={styles.liste}
         ListEmptyComponent={<Text style={styles.bos}>Kayıt bulunamadı.</Text>}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.kart} onPress={() => setSecilen(item)} activeOpacity={0.75}>
-            {item.kapakFotoUrl ? (
-              <Image source={{ uri: item.kapakFotoUrl }} style={styles.foto} resizeMode="cover" />
-            ) : (
-              <GorselPlaceholder icon={Landmark} size={110} iconSize={28} style={styles.foto} />
-            )}
-            <View style={styles.kartIcerik}>
-              <Text style={styles.isim}>{item.isim}</Text>
-              {item.donem ? <Text style={styles.donem}>{item.donem}</Text> : null}
-              {item.kisaAciklama ? (
-                <Text style={styles.kisa} numberOfLines={2}>
-                  {item.kisaAciklama}
-                </Text>
-              ) : null}
-              <View style={styles.qrBadge}>
-                <Text style={styles.qrBadgeTxt}>QR ile Keşfet</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+          <ListCard
+            onPress={() => setSecilen(item)}
+            title={item.isim}
+            subtitle={item.kisaAciklama}
+            badge={item.donem || 'QR ile Keşfet'}
+            meta={item.donem ? undefined : undefined}
+            thumbnail={
+              item.kapakFotoUrl ? (
+                <Image source={{ uri: item.kapakFotoUrl }} style={styles.foto} resizeMode="cover" />
+              ) : (
+                <GorselPlaceholder icon={Landmark} size={56} iconSize={22} style={styles.foto} />
+              )
+            }
+          />
         )}
       />
 
@@ -182,8 +186,7 @@ export default function EserlerScreen() {
           </TouchableOpacity>
         </View>
       </Modal>
-      </>
-    )
+    </ScreenPage>
   )
 }
 
@@ -196,36 +199,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  bannerTxt: { flex: 1, color: COLORS.WHITE, fontSize: 10, fontWeight: '600', lineHeight: 15 },
-  liste: { paddingTop: 8, paddingBottom: 32 },
-  bos: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 24 },
-  kart: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 16,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    ...SHADOW,
-  },
-  foto: { width: 110, height: 110, backgroundColor: COLORS.BORDER },
-  kartIcerik: { flex: 1, padding: 12, justifyContent: 'center' },
-  isim: { fontSize: 14, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 3 },
-  donem: { fontSize: 11, color: COLORS.PRIMARY, fontStyle: 'italic', marginBottom: 4 },
-  kisa: { fontSize: 10, color: COLORS.TEXT_2, lineHeight: 16, marginBottom: 6 },
-  qrBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.PRIMARY_BG,
-    borderRadius: 6,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-  },
-  qrBadgeTxt: { fontSize: 8, fontWeight: '800', color: COLORS.PRIMARY },
-  modalSafe: { flex: 1, backgroundColor: COLORS.BG },
+  bannerTxt: { flex: 1, color: COLORS.WHITE, fontFamily: FONTS.bodySemi, fontSize: 10, lineHeight: 15 },
+  liste: { padding: 12, paddingBottom: 32 },
+  bos: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 24 },
+  foto: { width: 56, height: 56, borderRadius: RADIUS.sm, backgroundColor: COLORS.BORDER },
+  modalSafe: { flex: 1, backgroundColor: POSTER.PAPER },
   modalCoverWrap: { width: '100%', height: 280, position: 'relative' },
-  modalFoto: { width: '100%', height: 280, backgroundColor: COLORS.PRIMARY },
+  modalFoto: { width: '100%', height: 280, backgroundColor: POSTER.BG },
   modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
   donemBadge: {
     position: 'absolute',
@@ -236,52 +216,52 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
   },
-  donemBadgeTxt: { color: COLORS.WHITE, fontSize: 11, fontWeight: '700' },
+  donemBadgeTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 11 },
   modalSheet: {
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: POSTER.PAPER,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -16,
     padding: 20,
     paddingBottom: 24,
   },
-  modalBaslik: { fontSize: 22, fontWeight: '800', color: COLORS.TEXT_1 },
-  modalDonem: { marginTop: 4, fontSize: 13, color: COLORS.PRIMARY, fontStyle: 'italic' },
+  modalBaslik: { fontFamily: FONTS.display, fontSize: 22, color: COLORS.TEXT_1 },
+  modalDonem: { marginTop: 4, fontFamily: FONTS.bodyMedium, fontSize: 13, color: COLORS.PRIMARY, fontStyle: 'italic' },
   accent: { width: 32, height: 3, backgroundColor: COLORS.PRIMARY, marginVertical: 12 },
-  modalKisa: { fontSize: 14, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 10 },
-  modalDetay: { fontSize: 14, color: COLORS.TEXT_2, lineHeight: 24, marginBottom: 16 },
+  modalKisa: { fontFamily: FONTS.body, fontSize: 14, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 10 },
+  modalDetay: { fontFamily: FONTS.body, fontSize: 14, color: COLORS.TEXT_2, lineHeight: 24, marginBottom: 16 },
   videoBtn: {
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 10,
   },
-  videoBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 14 },
+  videoBtnTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 14 },
   qrBanner: {
     backgroundColor: COLORS.PRIMARY_BG,
     borderWidth: 1,
     borderColor: COLORS.PRIMARY_BG,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 12,
   },
-  qrBannerTit: { fontSize: 12, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 6 },
-  qrBannerSub: { fontSize: 10, color: COLORS.TEXT_2, marginBottom: 8, lineHeight: 15 },
+  qrBannerTit: { fontFamily: FONTS.bodyExtra, fontSize: 12, color: COLORS.TEXT_1, marginBottom: 6 },
+  qrBannerSub: { fontFamily: FONTS.body, fontSize: 10, color: COLORS.TEXT_2, marginBottom: 8, lineHeight: 15 },
   qrActBtn: {
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     padding: 11,
     alignItems: 'center',
   },
-  qrActBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 13 },
+  qrActBtnTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 13 },
   kapatBtn: {
     margin: 16,
     backgroundColor: COLORS.DARK,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     alignItems: 'center',
   },
-  kapatBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 15 },
+  kapatBtnTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 15 },
   videoModal: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   video: { width: '100%', height: '70%' },
   videoClose: {
@@ -291,7 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
-  videoCloseTxt: { color: COLORS.WHITE, fontWeight: '800' },
+  videoCloseTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold },
 })

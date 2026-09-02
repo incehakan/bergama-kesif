@@ -11,16 +11,17 @@ import {
   StatusBar,
   Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import * as Linking from 'expo-linking'
 import { ChevronRight, Landmark, Navigation, Phone, Pill, Siren } from 'lucide-react-native'
 import { getBaskan, getEtkinlikler, getEserler, getHaberler } from '../../lib/api'
 import { eczaneMapsUrl, eczaneTelUrl, getNobetciEczaneler } from '../../lib/eczaneler'
+import PosterHero, { HamburgerButton } from '../../components/PosterHero'
+import ScreenPage from '../../components/ScreenPage'
 import GorselPlaceholder from '../../components/GorselPlaceholder'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../../constants/theme'
 
 function formatEventDate(iso) {
   if (!iso) return '—'
@@ -46,11 +47,7 @@ function QrIconMini() {
 }
 
 function ScreenChrome({ children }) {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{children}</View>
-    </SafeAreaView>
-  )
+  return <ScreenPage paper={false}>{children}</ScreenPage>
 }
 
 export default function AnaSayfa() {
@@ -182,30 +179,12 @@ export default function AnaSayfa() {
 
   return (
     <ScreenChrome>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.PRIMARY} translucent={Platform.OS === 'android'} />
+      <StatusBar barStyle="light-content" backgroundColor={POSTER.BG} translucent={Platform.OS === 'android'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollRoot}>
-        <View style={styles.hero}>
-          <View style={styles.heroContent} pointerEvents="box-none">
-            <Text style={styles.bergama}>BERGAMA</Text>
-            <View style={styles.heroLine} />
-            <Text style={styles.heroSub}>TARİHİN İZİNDE KEŞFET</Text>
-            <View style={styles.heroInfoRow}>
-              <Text style={styles.heroInfo}>📍 Bergama, İzmir</Text>
-              <Text style={styles.heroInfo}>🏛 UNESCO Mirası</Text>
-            </View>
-          </View>
-          <View style={styles.wave} pointerEvents="none" />
-          <TouchableOpacity
-            style={styles.hamBtn}
-            onPress={() => setMenuOpen(true)}
-            activeOpacity={0.75}
-            hitSlop={16}
-          >
-            <View style={styles.hamLine} />
-            <View style={[styles.hamLine, { marginTop: 5 }]} />
-            <View style={[styles.hamLine, { marginTop: 5 }]} />
-          </TouchableOpacity>
-        </View>
+        <PosterHero
+          variant="full"
+          rightAction={<HamburgerButton onPress={() => setMenuOpen(true)} />}
+        />
 
         <View style={styles.scrollPad}>
           <TouchableOpacity
@@ -458,63 +437,11 @@ export default function AnaSayfa() {
 }
 
 const styles = StyleSheet.create({
-  scrollRoot: { paddingBottom: 24 },
-  hero: {
-    height: 240,
-    backgroundColor: COLORS.PRIMARY,
-    position: 'relative',
-    overflow: 'visible',
-  },
-  hamBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 16,
-    zIndex: 20,
-    elevation: 20,
-    padding: 8,
-  },
-  hamLine: { width: 22, height: 2, backgroundColor: COLORS.WHITE, borderRadius: 1 },
-  heroContent: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    paddingTop: 40,
-  },
-  bergama: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: COLORS.WHITE,
-    letterSpacing: 2,
-  },
-  heroLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    marginVertical: 8,
-  },
-  heroSub: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 3,
-    fontWeight: '600',
-  },
-  heroInfoRow: { flexDirection: 'row', gap: 16, marginTop: 12, flexWrap: 'wrap' },
-  heroInfo: { fontSize: 10, color: COLORS.WHITE, fontWeight: '500' },
-  wave: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: -20,
-    height: 20,
-    backgroundColor: COLORS.BG,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  scrollPad: { paddingTop: 28, paddingBottom: 16 },
+  scrollRoot: { paddingBottom: 24, backgroundColor: POSTER.PAPER },
+  scrollPad: { paddingTop: 10, paddingBottom: 16 },
   qrCard: {
     backgroundColor: COLORS.DARK,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     padding: 14,
     flexDirection: 'row',
     gap: 12,
@@ -531,8 +458,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  qrTitle: { color: COLORS.WHITE, fontWeight: '700', fontSize: 13 },
-  qrSub: { marginTop: 4, color: 'rgba(255,255,255,0.45)', fontSize: 9 },
+  qrTitle: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 13 },
+  qrSub: { marginTop: 4, color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.body, fontSize: 9 },
   eczCard: {
     backgroundColor: COLORS.BG_CARD,
     borderRadius: 14,

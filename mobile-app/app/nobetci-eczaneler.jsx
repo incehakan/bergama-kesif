@@ -7,7 +7,6 @@ import {
   View,
   StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { Phone, Pill, RefreshCw } from 'lucide-react-native'
@@ -15,7 +14,9 @@ import { eczaneTelUrl, getNobetciEczaneler } from '../lib/eczaneler'
 import HaritaButonu from '../components/HaritaButonu'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorView from '../components/ErrorView'
-import { COLORS, SHADOW } from '../constants/theme'
+import ScreenPage from '../components/ScreenPage'
+import ScreenHeader from '../components/ScreenHeader'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../constants/theme'
 
 async function openUrl(url) {
   if (!url) return
@@ -66,16 +67,9 @@ export default function NobetciEczanelerScreen() {
     load(false)
   }, [load])
 
-  const header = (
-    <View style={styles.top}>
-      <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12}>
-        <Text style={styles.back}>← Geri</Text>
-      </TouchableOpacity>
+  const headerExtra = (
+    <>
       <View style={styles.topRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.topLabel}>SAĞLIK</Text>
-          <Text style={styles.topTitle}>Nöbetçi Eczaneler</Text>
-        </View>
         <TouchableOpacity
           style={styles.refreshBtn}
           onPress={() => load(true)}
@@ -85,24 +79,48 @@ export default function NobetciEczanelerScreen() {
           <RefreshCw size={18} color={COLORS.WHITE} strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.updated}>Son güncelleme: {formatSaat(updatedAt)}</Text>
-    </View>
+      {updatedAt ? (
+        <Text style={styles.updated}>Son güncelleme: {formatSaat(updatedAt)}</Text>
+      ) : null}
+    </>
   )
 
-  const chrome = (body) => (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.page}>
-        {header}
-        {body}
-      </View>
-    </SafeAreaView>
+  const backBtn = (
+    <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12} style={styles.backWrap}>
+      <Text style={styles.back}>← Geri</Text>
+    </TouchableOpacity>
   )
 
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={() => load(false)} />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        {backBtn}
+        <ScreenHeader title="Nöbetçi Eczaneler" subtitle="SAĞLIK">
+          {headerExtra}
+        </ScreenHeader>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        {backBtn}
+        <ScreenHeader title="Nöbetçi Eczaneler" subtitle="SAĞLIK">
+          {headerExtra}
+        </ScreenHeader>
+        <ErrorView message={error} onRetry={() => load(false)} />
+      </ScreenPage>
+    )
+  }
 
-  return chrome(
-    <FlatList
+  return (
+    <ScreenPage>
+      {backBtn}
+      <ScreenHeader title="Nöbetçi Eczaneler" subtitle="SAĞLIK">
+        {headerExtra}
+      </ScreenHeader>
+      <FlatList
       data={rows}
       keyExtractor={(item, index) => String(item?.EczaneId || item?.Adi || index)}
       contentContainerStyle={styles.list}
@@ -152,37 +170,28 @@ export default function NobetciEczanelerScreen() {
         )
       }}
     />
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.PRIMARY },
-  page: { flex: 1, backgroundColor: COLORS.BG },
-  top: { backgroundColor: COLORS.DARK, padding: 16, paddingBottom: 14 },
-  back: { color: COLORS.WHITE, fontWeight: '700', fontSize: 14, marginBottom: 10 },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  topLabel: {
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 2,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  topTitle: { fontSize: 24, fontWeight: '800', color: COLORS.WHITE },
+  backWrap: { paddingHorizontal: 16, paddingTop: 4, backgroundColor: POSTER.BG },
+  back: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 14 },
+  topRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 },
   refreshBtn: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  updated: { marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: '600' },
+  updated: { fontFamily: FONTS.bodySemi, fontSize: 11, color: POSTER.TAG, marginTop: 4 },
   list: { padding: 12, paddingBottom: 32, gap: 8, flexGrow: 1 },
-  empty: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 28, lineHeight: 20, paddingHorizontal: 16 },
+  empty: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 28, lineHeight: 20, paddingHorizontal: 16 },
   card: {
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 14,
+    backgroundColor: POSTER.PAPER,
+    borderRadius: RADIUS.md,
     padding: 14,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
@@ -198,9 +207,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  name: { fontSize: 13, fontWeight: '800', color: COLORS.TEXT_1 },
-  bolge: { marginTop: 2, fontSize: 10, fontWeight: '700', color: COLORS.PRIMARY },
-  addr: { fontSize: 12, color: COLORS.TEXT_2, lineHeight: 18, marginBottom: 12 },
+  name: { fontFamily: FONTS.bodyExtra, fontSize: 13, color: COLORS.TEXT_1 },
+  bolge: { marginTop: 2, fontFamily: FONTS.bodyBold, fontSize: 10, color: COLORS.PRIMARY },
+  addr: { fontFamily: FONTS.body, fontSize: 12, color: COLORS.TEXT_2, lineHeight: 18, marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 8 },
   actBtn: {
     flex: 1,
@@ -212,5 +221,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  actTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 12 },
+  actTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 12 },
 })

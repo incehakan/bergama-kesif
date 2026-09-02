@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react-native'
@@ -8,7 +7,9 @@ import { getIletisim } from '../lib/api'
 import HaritaButonu from '../components/HaritaButonu'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorView from '../components/ErrorView'
-import { COLORS, SHADOW } from '../constants/theme'
+import ScreenPage from '../components/ScreenPage'
+import ScreenHeader from '../components/ScreenHeader'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../constants/theme'
 
 function hasValue(v) {
   return v != null && String(v).trim() !== ''
@@ -53,24 +54,30 @@ export default function IletisimScreen() {
     load()
   }, [load])
 
-  const chrome = (body) => (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.page}>{body}</View>
-    </SafeAreaView>
+  const backBtn = (
+    <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12} style={styles.backWrap}>
+      <Text style={styles.back}>← Geri</Text>
+    </TouchableOpacity>
   )
 
-  const header = (
-    <View style={styles.top}>
-      <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12}>
-        <Text style={styles.back}>← Geri</Text>
-      </TouchableOpacity>
-      <Text style={styles.topLabel}>BELEDİYE</Text>
-      <Text style={styles.topTitle}>İletişim</Text>
-    </View>
-  )
-
-  if (loading) return chrome(<>{header}<LoadingSpinner /></>)
-  if (error) return chrome(<>{header}<ErrorView message={error} onRetry={load} /></>)
+  if (loading) {
+    return (
+      <ScreenPage>
+        {backBtn}
+        <ScreenHeader title="İletişim" subtitle="BELEDİYE" />
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        {backBtn}
+        <ScreenHeader title="İletişim" subtitle="BELEDİYE" />
+        <ErrorView message={error} onRetry={load} />
+      </ScreenPage>
+    )
+  }
 
   const cards = []
   if (hasValue(data?.telefon)) {
@@ -110,9 +117,10 @@ export default function IletisimScreen() {
     })
   }
 
-  return chrome(
-    <>
-      {header}
+  return (
+    <ScreenPage>
+      {backBtn}
+      <ScreenHeader title="İletişim" subtitle="BELEDİYE" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -156,31 +164,21 @@ export default function IletisimScreen() {
           />
         ) : null}
       </ScrollView>
-    </>
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.PRIMARY },
-  page: { flex: 1, backgroundColor: COLORS.BG },
-  top: { backgroundColor: COLORS.DARK, padding: 16, paddingBottom: 16 },
-  back: { color: COLORS.WHITE, fontWeight: '700', fontSize: 14, marginBottom: 10 },
-  topLabel: {
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 2,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  topTitle: { fontSize: 24, fontWeight: '800', color: COLORS.WHITE },
+  backWrap: { paddingHorizontal: 16, paddingTop: 4, backgroundColor: POSTER.BG },
+  back: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 14 },
   scroll: { flex: 1 },
   content: { padding: 12, paddingBottom: 32, gap: 8 },
-  empty: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 20 },
+  empty: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 20 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 14,
+    backgroundColor: POSTER.PAPER,
+    borderRadius: RADIUS.md,
     padding: 14,
     gap: 12,
     borderWidth: 1,
@@ -196,6 +194,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardMid: { flex: 1, minWidth: 0 },
-  cardLabel: { fontSize: 10, fontWeight: '800', color: COLORS.PRIMARY, marginBottom: 4 },
-  cardValue: { fontSize: 13, fontWeight: '700', color: COLORS.TEXT_1, lineHeight: 18 },
+  cardLabel: { fontFamily: FONTS.bodyBold, fontSize: 10, color: COLORS.PRIMARY, marginBottom: 4 },
+  cardValue: { fontFamily: FONTS.bodySemi, fontSize: 13, color: COLORS.TEXT_1, lineHeight: 18 },
 })
