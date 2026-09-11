@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler'
 import '../lib/fetchPolyfill'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
@@ -34,22 +34,27 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   })
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded || fontError) {
+  const ready = fontsLoaded || !!fontError
+
+  const hideSplash = useCallback(async () => {
+    if (!ready) return
+    try {
       await SplashScreen.hideAsync()
+    } catch {
+      /* */
     }
-  }, [fontsLoaded, fontError])
+  }, [ready])
 
   useEffect(() => {
-    onLayoutRootView()
-  }, [onLayoutRootView])
+    hideSplash()
+  }, [hideSplash])
 
-  if (!fontsLoaded && !fontError) {
+  if (!ready) {
     return null
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={hideSplash}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
         <Stack
