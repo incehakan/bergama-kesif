@@ -1,14 +1,60 @@
 import 'react-native-gesture-handler'
 import '../lib/fetchPolyfill'
+import { useCallback, useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as SplashScreen from 'expo-splash-screen'
+import { useFonts } from 'expo-font'
+import {
+  Fraunces_300Light,
+  Fraunces_500Medium,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces'
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { COLORS } from '../constants/theme'
+
+SplashScreen.preventAutoHideAsync().catch(() => {})
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_300Light,
+    Fraunces_500Medium,
+    Fraunces_700Bold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  })
+
+  const ready = fontsLoaded || !!fontError
+
+  const hideSplash = useCallback(async () => {
+    if (!ready) return
+    try {
+      await SplashScreen.hideAsync()
+    } catch {
+      /* */
+    }
+  }, [ready])
+
+  useEffect(() => {
+    hideSplash()
+  }, [hideSplash])
+
+  if (!ready) {
+    return null
+  }
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={hideSplash}>
       <SafeAreaProvider>
         <StatusBar style="dark" />
         <Stack

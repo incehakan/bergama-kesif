@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { getHaberler } from '../../lib/api'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import ScreenPage from '../../components/ScreenPage'
+import ScreenHeader from '../../components/ScreenHeader'
+import { BlockCard } from '../../components/ListCard'
+import { COLORS, FONTS, RADIUS } from '../../constants/theme'
 
 export default function HaberlerScreen() {
   const router = useRouter()
@@ -30,21 +32,24 @@ export default function HaberlerScreen() {
     load()
   }, [load])
 
-  const chrome = (body) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.WHITE }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
-    </SafeAreaView>
-  )
-
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={load} />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        <ErrorView message={error} onRetry={load} />
+      </ScreenPage>
+    )
+  }
 
   return (
-    chrome(
-      <>
-      <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>Haberler</Text>
-      </View>
+    <ScreenPage>
+      <ScreenHeader title="Haberler" subtitle="GÜNCEL" />
       <FlatList
         style={{ flex: 1 }}
         data={rows}
@@ -52,11 +57,7 @@ export default function HaberlerScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={styles.empty}>Haber bulunamadı.</Text>}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => router.push(`/haber/${item.id}`)}
-            activeOpacity={0.75}
-          >
+          <BlockCard accent onPress={() => router.push(`/haber/${item.id}`)} style={styles.card}>
             <Text style={styles.title} numberOfLines={2}>
               {item.baslik}
             </Text>
@@ -65,52 +66,41 @@ export default function HaberlerScreen() {
                 {item.ozet}
               </Text>
             ) : null}
-            <View style={styles.footer}>
-              <Text style={styles.date}>
+            <TouchableOpacity onPress={() => router.push(`/haber/${item.id}`)} activeOpacity={0.75}>
+              <Text style={styles.footer}>
                 {item.olusturma ? new Date(item.olusturma).toLocaleDateString('tr-TR') : ''}
+                {'  ·  '}
+                Devamını oku →
               </Text>
-              <Text style={styles.readMore}>Devamını oku →</Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </BlockCard>
         )}
       />
-      </>
-    )
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  pageHeader: { paddingHorizontal: 16, paddingVertical: 12 },
-  pageTitle: { fontSize: 22, fontWeight: '800', color: COLORS.TEXT_1 },
-  list: { paddingBottom: 32 },
-  empty: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 24 },
-  card: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.PRIMARY,
-    padding: 14,
-    ...SHADOW,
-  },
+  list: { padding: 16, paddingBottom: 32 },
+  empty: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 24 },
+  card: { marginHorizontal: 0 },
   title: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontFamily: FONTS.bodyExtra,
+    fontSize: 14,
     color: COLORS.TEXT_1,
     lineHeight: 20,
     marginBottom: 4,
   },
   ozet: {
+    fontFamily: FONTS.body,
     fontSize: 11,
     color: COLORS.TEXT_2,
     lineHeight: 18,
     marginBottom: 8,
   },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  date: { fontSize: 10, color: COLORS.PRIMARY, fontWeight: '600' },
-  readMore: { fontSize: 10, fontWeight: '800', color: COLORS.PRIMARY },
+  footer: {
+    fontFamily: FONTS.bodySemi,
+    fontSize: 10,
+    color: COLORS.PRIMARY,
+  },
 })

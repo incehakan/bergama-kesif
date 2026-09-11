@@ -9,15 +9,18 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Linking from 'expo-linking'
-import { ChevronRight, UtensilsCrossed } from 'lucide-react-native'
+import { UtensilsCrossed } from 'lucide-react-native'
 import { getAllYemeIcme } from '../../lib/api'
 import GorselPlaceholder from '../../components/GorselPlaceholder'
 import HaritaButonu from '../../components/HaritaButonu'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import ScreenPage from '../../components/ScreenPage'
+import ScreenHeader from '../../components/ScreenHeader'
+import ListCard from '../../components/ListCard'
+import { FilterChipPoster } from '../../components/FilterChip'
+import { COLORS, FONTS, POSTER, RADIUS } from '../../constants/theme'
 
 const FILTERS = [
   { label: 'Tümü', value: null },
@@ -62,46 +65,26 @@ export default function RehberScreen() {
     }
   }
 
-  const chrome = (body) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
-    </SafeAreaView>
-  )
-
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={load} />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        <ErrorView message={error} onRetry={load} />
+      </ScreenPage>
+    )
+  }
 
   return (
-    chrome(
-      <>
-      <View style={styles.top}>
-        <Text style={styles.topLabel}>MEKANLAR & ÜRÜNLER</Text>
-        <Text style={styles.topTitle}>Rehber</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
-        >
-          {FILTERS.map((f) => {
-            const active = kategori === f.value
-            return (
-              <TouchableOpacity
-                key={f.label}
-                onPress={() => setKategori(f.value)}
-                style={[
-                  styles.chip,
-                  active ? { backgroundColor: COLORS.PRIMARY, borderColor: COLORS.PRIMARY } : { borderColor: 'rgba(255,255,255,0.2)' },
-                ]}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.chipTxt, active ? { color: COLORS.WHITE } : { color: 'rgba(255,255,255,0.5)' }]}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
-            )
-          })}
-        </ScrollView>
-      </View>
+    <ScreenPage>
+      <ScreenHeader title="Rehber" subtitle="MEKANLAR & ÜRÜNLER">
+        <FilterChipPoster items={FILTERS} value={kategori} onChange={setKategori} />
+      </ScreenHeader>
 
       <FlatList
         style={{ flex: 1 }}
@@ -110,25 +93,19 @@ export default function RehberScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={styles.empty}>Kayıt bulunamadı.</Text>}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => setDetay(item)} activeOpacity={0.75}>
-            {item.kapakFotoUrl ? (
-              <Image source={{ uri: item.kapakFotoUrl }} style={styles.thumb} resizeMode="cover" />
-            ) : (
-              <GorselPlaceholder icon={UtensilsCrossed} size={56} iconSize={22} style={styles.thumb} />
-            )}
-            <View style={styles.cardMid}>
-              <Text style={styles.name}>{item.isim}</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeTxt}>{String(item.kategori || '').toUpperCase()}</Text>
-              </View>
-              <Text style={styles.addr} numberOfLines={2}>
-                {item.adres || 'Adres yok'}
-              </Text>
-            </View>
-            <View style={styles.arrowBox}>
-              <ChevronRight size={18} color={COLORS.PRIMARY} strokeWidth={2.5} />
-            </View>
-          </TouchableOpacity>
+          <ListCard
+            onPress={() => setDetay(item)}
+            title={item.isim}
+            subtitle={item.adres || 'Adres yok'}
+            badge={String(item.kategori || '').toUpperCase()}
+            thumbnail={
+              item.kapakFotoUrl ? (
+                <Image source={{ uri: item.kapakFotoUrl }} style={styles.thumb} resizeMode="cover" />
+              ) : (
+                <GorselPlaceholder icon={UtensilsCrossed} size={56} iconSize={22} style={styles.thumb} />
+              )
+            }
+          />
         )}
       />
 
@@ -165,97 +142,46 @@ export default function RehberScreen() {
           </View>
         </View>
       </Modal>
-      </>
-    )
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  top: { backgroundColor: COLORS.DARK, padding: 16, paddingBottom: 14 },
-  topLabel: {
-    fontSize: 8,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 2,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  topTitle: { fontSize: 24, fontWeight: '800', color: COLORS.WHITE },
-  chips: { marginTop: 10, gap: 8, flexDirection: 'row', alignItems: 'center', paddingRight: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  chipTxt: { fontSize: 9, fontWeight: '800' },
-  list: { padding: 12, paddingBottom: 32, gap: 8 },
-  empty: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 20 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 14,
-    padding: 12,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    marginBottom: 8,
-    ...SHADOW,
-  },
-  thumb: { width: 56, height: 56, borderRadius: 12, backgroundColor: COLORS.BORDER },
-  cardMid: { flex: 1, minWidth: 0 },
-  name: { fontSize: 12, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 3 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.PRIMARY_BG,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  badgeTxt: { fontSize: 7, fontWeight: '800', color: COLORS.PRIMARY },
-  addr: { fontSize: 9, color: COLORS.TEXT_3 },
-  arrowBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: COLORS.PRIMARY_BG,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  list: { padding: 12, paddingBottom: 32 },
+  empty: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 20 },
+  thumb: { width: 56, height: 56, borderRadius: RADIUS.sm, backgroundColor: COLORS.BORDER },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalInner: {
     maxHeight: '90%',
-    backgroundColor: COLORS.BG,
+    backgroundColor: POSTER.PAPER,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
   },
   modalCover: { width: '100%', height: 220, backgroundColor: COLORS.BORDER },
   modalSheet: {
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: POSTER.PAPER,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -16,
     padding: 18,
     paddingBottom: 12,
   },
-  modalName: { fontSize: 18, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 4 },
-  modalDesc: { fontSize: 13, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 14 },
+  modalName: { fontFamily: FONTS.display, fontSize: 20, color: COLORS.TEXT_1, marginBottom: 4 },
+  modalDesc: { fontFamily: FONTS.body, fontSize: 13, color: COLORS.TEXT_2, lineHeight: 22, marginBottom: 14 },
   telBtn: {
     backgroundColor: '#25D366',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 13,
     alignItems: 'center',
   },
-  telBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 11 },
-  modalFooter: { padding: 16, paddingTop: 0, backgroundColor: COLORS.WHITE },
+  telBtnTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 11 },
+  modalFooter: { padding: 16, paddingTop: 0, backgroundColor: POSTER.PAPER },
   darkClose: {
     backgroundColor: COLORS.DARK,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 13,
     alignItems: 'center',
   },
-  darkCloseTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 14 },
+  darkCloseTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 14 },
 })

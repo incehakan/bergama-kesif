@@ -9,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { WebView } from 'react-native-webview'
 import { Mountain } from 'lucide-react-native'
@@ -19,7 +18,9 @@ import GorselPlaceholder from '../../components/GorselPlaceholder'
 import HaritaButonu from '../../components/HaritaButonu'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import ScreenPage from '../../components/ScreenPage'
+import ScreenHeader from '../../components/ScreenHeader'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../../constants/theme'
 
 function zorlukRenk(z) {
   if (z === 'KOLAY') return '#27AE60'
@@ -107,21 +108,24 @@ export default function RotalarScreen() {
   const seciliDuraklar = secili ? extractAllStops(secili.rotaDuraklar) : []
   const seciliIlkDurak = secili ? extractFirstStopCoords(secili.rotaDuraklar) : null
 
-  const chrome = (body) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
-    </SafeAreaView>
-  )
-
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={load} />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage>
+        <ErrorView message={error} onRetry={load} />
+      </ScreenPage>
+    )
+  }
 
   return (
-    chrome(
-      <>
-      <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>Rotalar</Text>
-      </View>
+    <ScreenPage>
+      <ScreenHeader title="Rotalar" subtitle="KEŞİF" />
       <FlatList
         style={{ flex: 1 }}
         data={rows}
@@ -234,24 +238,17 @@ export default function RotalarScreen() {
           </View>
         </View>
       </Modal>
-      </>
-    )
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  pageHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: COLORS.PRIMARY,
-  },
-  pageTitle: { fontSize: 22, fontWeight: '800', color: COLORS.WHITE },
   list: { padding: 16, paddingBottom: 32 },
-  empty: { textAlign: 'center', color: COLORS.TEXT_3, marginTop: 24 },
+  empty: { textAlign: 'center', color: COLORS.TEXT_3, fontFamily: FONTS.body, marginTop: 24 },
   card: {
-    marginHorizontal: 16,
+    marginHorizontal: 0,
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
     backgroundColor: COLORS.BG_CARD,
     ...SHADOW,
@@ -271,8 +268,8 @@ const styles = StyleSheet.create({
     left: 12,
     bottom: 12,
     right: 80,
+    fontFamily: FONTS.bodyExtra,
     fontSize: 15,
-    fontWeight: '800',
     color: COLORS.WHITE,
   },
   cardTitleOnPlaceholder: {
@@ -294,7 +291,7 @@ const styles = StyleSheet.create({
   },
   meta: { fontSize: 11, color: COLORS.TEXT_2 },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalInner: { maxHeight: '92%', backgroundColor: COLORS.BG, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' },
+  modalInner: { maxHeight: '92%', backgroundColor: POSTER.PAPER, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' },
   modalScroll: { paddingBottom: 8 },
   modalActions: {
     paddingHorizontal: 16,
@@ -306,14 +303,14 @@ const styles = StyleSheet.create({
   modalImgWrap: { width: '100%' },
   modalImg: { width: '100%', height: 260, backgroundColor: COLORS.BORDER },
   modalSheet: {
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: POSTER.PAPER,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -16,
     padding: 20,
     paddingBottom: 8,
   },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.TEXT_1, marginBottom: 4 },
+  modalTitle: { fontFamily: FONTS.display, fontSize: 20, color: COLORS.TEXT_1, marginBottom: 4 },
   modalMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' },
   zBadgeSm: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   modalMetaTxt: { fontSize: 12, color: COLORS.TEXT_2, flex: 1 },

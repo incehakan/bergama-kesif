@@ -8,15 +8,17 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Video, ResizeMode } from 'expo-av'
 import { Glasses, Landmark, Play } from 'lucide-react-native'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
 import GorselPlaceholder from '../../components/GorselPlaceholder'
+import HaritaButonu from '../../components/HaritaButonu'
+import ScreenPage from '../../components/ScreenPage'
+import PosterHero from '../../components/PosterHero'
 import { getEserler } from '../../lib/api'
-import { COLORS } from '../../constants/theme'
+import { COLORS, FONTS, POSTER, RADIUS } from '../../constants/theme'
 
 export default function EserDetayScreen() {
   const params = useLocalSearchParams()
@@ -61,92 +63,97 @@ export default function EserDetayScreen() {
     load()
   }, [load])
 
-  const chrome = (body) => (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.PRIMARY }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: COLORS.BG }}>{body}</View>
-    </SafeAreaView>
-  )
-
-  if (loading) return chrome(<LoadingSpinner />)
+  if (loading) {
+    return (
+      <ScreenPage>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
   if (error || !eser) {
-    return chrome(<ErrorView message={error || 'Eser bulunamadı.'} onRetry={load} />)
+    return (
+      <ScreenPage>
+        <ErrorView message={error || 'Eser bulunamadı.'} onRetry={load} />
+      </ScreenPage>
+    )
   }
 
   const vrId = eser.vrIcerikId ?? eser.vrIcerik?.id
 
   return (
-    chrome(
-      <>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12}>
-            <Text style={styles.back}>← Geri</Text>
-          </TouchableOpacity>
-          <Text style={styles.topTitle}>Tarihi Eser</Text>
-          <View style={{ width: 56 }} />
+    <ScreenPage>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75} hitSlop={12}>
+          <Text style={styles.back}>← Geri</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <PosterHero variant="strip" title={eser.isim} subtitle="TARİHİ ESER" />
+        <View style={styles.coverWrap}>
+          {eser.kapakFotoUrl ? (
+            <>
+              <Image source={{ uri: eser.kapakFotoUrl }} style={styles.cover} resizeMode="cover" />
+              <View style={styles.coverOverlay} />
+            </>
+          ) : (
+            <GorselPlaceholder icon={Landmark} size={240} iconSize={48} style={styles.cover} />
+          )}
+          {eser.donem ? (
+            <View style={styles.periodBadge}>
+              <Text style={styles.periodBadgeTxt}>{eser.donem}</Text>
+            </View>
+          ) : null}
         </View>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          <View style={styles.coverWrap}>
-            {eser.kapakFotoUrl ? (
-              <>
-                <Image source={{ uri: eser.kapakFotoUrl }} style={styles.cover} resizeMode="cover" />
-                <View style={styles.coverOverlay} />
-              </>
-            ) : (
-              <GorselPlaceholder icon={Landmark} size={280} iconSize={48} style={styles.cover} />
-            )}
-            {eser.donem ? (
-              <View style={styles.periodBadge}>
-                <Text style={styles.periodBadgeTxt}>{eser.donem}</Text>
-              </View>
-            ) : null}
-            <Text style={[styles.coverTitle, !eser.kapakFotoUrl && styles.coverTitleOnPlaceholder]}>
-              {eser.isim}
-            </Text>
-          </View>
 
-          <View style={styles.sheet}>
-            {eser.kisaAciklama ? <Text style={styles.kisa}>{eser.kisaAciklama}</Text> : null}
-            <View style={styles.accent} />
-            {eser.detayliAciklama ? (
-              <Text style={styles.detay}>{eser.detayliAciklama}</Text>
-            ) : null}
+        <View style={styles.sheet}>
+          {eser.kisaAciklama ? <Text style={styles.kisa}>{eser.kisaAciklama}</Text> : null}
+          <View style={styles.accent} />
+          {eser.detayliAciklama ? (
+            <Text style={styles.detay}>{eser.detayliAciklama}</Text>
+          ) : null}
 
-            {eser.videoUrl ? (
-              <TouchableOpacity style={styles.btnVid} onPress={() => setVideoAcik(true)} activeOpacity={0.75}>
-                <Play size={22} color={COLORS.WHITE} />
-                <Text style={styles.btnVidTxt}>Videoyu İzle</Text>
-              </TouchableOpacity>
-            ) : null}
+          <HaritaButonu
+            lat={eser.koordinatLat}
+            lng={eser.koordinatLng}
+            label={eser.isim || 'Eser'}
+            style={{ marginBottom: 12 }}
+          />
 
-            {vrId ? (
-              <TouchableOpacity
-                style={styles.btnVr}
-                onPress={() => router.push(`/vr/${vrId}`)}
-                activeOpacity={0.75}
-              >
-                <Glasses size={22} color={COLORS.WHITE} />
-                <Text style={styles.btnVrTxt}>VR ile Keşfet</Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
-        </ScrollView>
-
-        <Modal visible={videoAcik} animationType="fade" onRequestClose={() => setVideoAcik(false)}>
-          <View style={styles.videoModal}>
-            <Video
-              source={{ uri: eser.videoUrl }}
-              style={styles.video}
-              useNativeControls
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay
-            />
-            <TouchableOpacity style={styles.videoClose} onPress={() => setVideoAcik(false)} activeOpacity={0.75}>
-              <Text style={styles.videoCloseTxt}>Kapat</Text>
+          {eser.videoUrl ? (
+            <TouchableOpacity style={styles.btnVid} onPress={() => setVideoAcik(true)} activeOpacity={0.75}>
+              <Play size={22} color={COLORS.WHITE} />
+              <Text style={styles.btnVidTxt}>Videoyu İzle</Text>
             </TouchableOpacity>
-          </View>
-        </Modal>
-      </>
-    )
+          ) : null}
+
+          {vrId ? (
+            <TouchableOpacity
+              style={styles.btnVr}
+              onPress={() => router.push(`/vr/${vrId}`)}
+              activeOpacity={0.75}
+            >
+              <Glasses size={22} color={COLORS.WHITE} />
+              <Text style={styles.btnVrTxt}>VR ile Keşfet</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </ScrollView>
+
+      <Modal visible={videoAcik} animationType="fade" onRequestClose={() => setVideoAcik(false)}>
+        <View style={styles.videoModal}>
+          <Video
+            source={{ uri: eser.videoUrl }}
+            style={styles.video}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
+            shouldPlay
+          />
+          <TouchableOpacity style={styles.videoClose} onPress={() => setVideoAcik(false)} activeOpacity={0.75}>
+            <Text style={styles.videoCloseTxt}>Kapat</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    </ScreenPage>
   )
 }
 
@@ -154,19 +161,15 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: COLORS.BG,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    paddingVertical: 8,
+    backgroundColor: POSTER.BG,
   },
-  back: { color: COLORS.PRIMARY, fontSize: 16, fontWeight: '700' },
-  topTitle: { fontSize: 17, fontWeight: '800', color: COLORS.TEXT_1 },
+  back: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 15 },
   scroll: { paddingBottom: 32 },
-  coverWrap: { width: '100%', height: 280, position: 'relative' },
-  cover: { width: '100%', height: 280, backgroundColor: COLORS.PRIMARY },
-  coverOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+  coverWrap: { width: '100%', height: 240, position: 'relative' },
+  cover: { width: '100%', height: 240, backgroundColor: POSTER.BG },
+  coverOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
   periodBadge: {
     position: 'absolute',
     top: 16,
@@ -176,49 +179,39 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
-  periodBadgeTxt: { color: COLORS.WHITE, fontSize: 11, fontWeight: '700' },
-  coverTitle: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 20,
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.WHITE,
-  },
-  coverTitleOnPlaceholder: { color: COLORS.TEXT_1 },
+  periodBadgeTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 11 },
   sheet: {
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: POSTER.PAPER,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -16,
     padding: 20,
   },
-  kisa: { fontSize: 14, fontStyle: 'italic', color: COLORS.TEXT_2, marginBottom: 10, lineHeight: 22 },
+  kisa: { fontFamily: FONTS.bodyMedium, fontSize: 14, fontStyle: 'italic', color: COLORS.TEXT_2, marginBottom: 10, lineHeight: 22 },
   accent: { width: 32, height: 3, backgroundColor: COLORS.PRIMARY, marginBottom: 12 },
-  detay: { fontSize: 14, color: COLORS.TEXT_2, lineHeight: 24, marginBottom: 8 },
+  detay: { fontFamily: FONTS.body, fontSize: 14, color: COLORS.TEXT_2, lineHeight: 24, marginBottom: 8 },
   btnVid: {
-    marginTop: 12,
+    marginTop: 4,
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  btnVidTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 15 },
+  btnVidTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 15 },
   btnVr: {
     marginTop: 10,
     backgroundColor: COLORS.DARK,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  btnVrTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 15 },
+  btnVrTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 15 },
   videoModal: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   video: { width: '100%', height: '70%' },
   videoClose: {
@@ -228,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
   },
-  videoCloseTxt: { color: COLORS.WHITE, fontWeight: '800' },
+  videoCloseTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold },
 })

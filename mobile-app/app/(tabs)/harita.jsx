@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { WebView } from 'react-native-webview'
 import * as Location from 'expo-location'
 import * as Linking from 'expo-linking'
@@ -18,7 +17,10 @@ import HaritaButonu from '../../components/HaritaButonu'
 import { buildExplorerMapHtml } from '../../lib/leafletWebMap'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorView from '../../components/ErrorView'
-import { COLORS, SHADOW } from '../../constants/theme'
+import ScreenPage from '../../components/ScreenPage'
+import ScreenHeader from '../../components/ScreenHeader'
+import { FilterChipPoster } from '../../components/FilterChip'
+import { COLORS, FONTS, POSTER, RADIUS, SHADOW } from '../../constants/theme'
 
 const FILTERS = [
   { label: 'Tümü', value: 'all' },
@@ -137,43 +139,33 @@ export default function HaritaScreen() {
     }
   }
 
-  const chrome = (body) => (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.page}>{body}</View>
-    </SafeAreaView>
-  )
+  if (loading) {
+    return (
+      <ScreenPage paper={false}>
+        <LoadingSpinner />
+      </ScreenPage>
+    )
+  }
+  if (error) {
+    return (
+      <ScreenPage paper={false}>
+        <ErrorView message={error} onRetry={load} />
+      </ScreenPage>
+    )
+  }
 
-  if (loading) return chrome(<LoadingSpinner />)
-  if (error) return chrome(<ErrorView message={error} onRetry={load} />)
-
-  return chrome(
-    <>
-      <View style={styles.top}>
-        <Text style={styles.topLabel}>KEŞFET</Text>
-        <Text style={styles.topTitle}>Harita</Text>
+  return (
+    <ScreenPage paper={false}>
+      <ScreenHeader title="Harita" subtitle="KEŞFET">
         <TextInput
           value={q}
           onChangeText={setQ}
           placeholder="Ara..."
-          placeholderTextColor="rgba(255,255,255,0.45)"
+          placeholderTextColor={POSTER.TAG}
           style={styles.search}
         />
-        <View style={styles.chips}>
-          {FILTERS.map((f) => {
-            const active = filter === f.value
-            return (
-              <TouchableOpacity
-                key={f.value}
-                onPress={() => setFilter(f.value)}
-                style={[styles.chip, active && styles.chipOn]}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.chipTxt, active && styles.chipTxtOn]}>{f.label}</Text>
-              </TouchableOpacity>
-            )
-          })}
-        </View>
-      </View>
+        <FilterChipPoster items={FILTERS} value={filter} onChange={setFilter} />
+      </ScreenHeader>
       <View style={styles.mapWrap}>
         <WebView
           ref={webRef}
@@ -219,38 +211,23 @@ export default function HaritaScreen() {
           </View>
         </View>
       ) : null}
-    </>
+    </ScreenPage>
   )
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.PRIMARY },
-  page: { flex: 1, backgroundColor: COLORS.BG },
-  top: { backgroundColor: COLORS.DARK, padding: 16, paddingBottom: 12 },
-  topLabel: { fontSize: 8, color: 'rgba(255,255,255,0.45)', letterSpacing: 2, fontWeight: '700', marginBottom: 2 },
-  topTitle: { fontSize: 24, fontWeight: '800', color: COLORS.WHITE, marginBottom: 10 },
   search: {
     backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === 'ios' ? 10 : 8,
     color: COLORS.WHITE,
+    fontFamily: FONTS.body,
     fontSize: 13,
     marginBottom: 10,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  chipOn: { backgroundColor: COLORS.PRIMARY, borderColor: COLORS.PRIMARY },
-  chipTxt: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.55)' },
-  chipTxtOn: { color: COLORS.WHITE },
-  mapWrap: { flex: 1 },
-  web: { flex: 1, backgroundColor: COLORS.BG },
+  mapWrap: { flex: 1, backgroundColor: POSTER.PAPER },
+  web: { flex: 1, backgroundColor: POSTER.PAPER },
   locate: {
     position: 'absolute',
     right: 14,
@@ -268,26 +245,26 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 16,
-    backgroundColor: COLORS.BG_CARD,
-    borderRadius: 14,
+    backgroundColor: POSTER.PAPER,
+    borderRadius: RADIUS.md,
     padding: 14,
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
+    borderColor: POSTER.PAPER_EDGE,
     ...SHADOW,
   },
-  sheetName: { fontSize: 14, fontWeight: '800', color: COLORS.TEXT_1 },
-  sheetAddr: { marginTop: 4, fontSize: 12, color: COLORS.TEXT_2, lineHeight: 17 },
+  sheetName: { fontFamily: FONTS.bodyExtra, fontSize: 14, color: COLORS.TEXT_1 },
+  sheetAddr: { marginTop: 4, fontFamily: FONTS.body, fontSize: 12, color: COLORS.TEXT_2, lineHeight: 17 },
   sheetRow: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
   sheetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: COLORS.PRIMARY,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
-  sheetBtnTxt: { color: COLORS.WHITE, fontWeight: '800', fontSize: 11 },
+  sheetBtnTxt: { color: COLORS.WHITE, fontFamily: FONTS.bodyBold, fontSize: 11 },
   sheetClose: { marginLeft: 'auto' },
-  sheetCloseTxt: { fontSize: 12, fontWeight: '700', color: COLORS.TEXT_2 },
+  sheetCloseTxt: { fontFamily: FONTS.bodyBold, fontSize: 12, color: COLORS.TEXT_2 },
 })
